@@ -60,8 +60,6 @@ python app.py
 nano-banana/
 ├── app.py                 # Flask приложение
 ├── requirements.txt       # Python зависимости
-├── image_generator.py     # Скрипт генерации изображений
-├── test_web.py           # Тестирование веб-сервиса
 ├── templates/
 │   └── index.html        # HTML шаблон
 ├── generated_images/     # Папка для сгенерированных изображений

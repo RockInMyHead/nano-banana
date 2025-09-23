@@ -35,9 +35,9 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Generated images (keep some examples)
+# Generated images
 generated_images/*.png
-!generated_images/.gitkeep
+*.png
 
 # Logs
 *.log
