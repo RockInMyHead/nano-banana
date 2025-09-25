@@ -295,6 +295,48 @@
                             required
                         ></textarea>
                     </div>
+                    
+                    <div class="form-group">
+                        <label>Размер изображения (в пикселях):</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label for="width" style="font-size: 0.9em; margin-bottom: 5px;">Ширина:</label>
+                                <input 
+                                    type="number" 
+                                    id="width" 
+                                    name="width" 
+                                    value="1024" 
+                                    min="256" 
+                                    max="2048" 
+                                    step="64"
+                                    style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px;"
+                                >
+                            </div>
+                            <div>
+                                <label for="height" style="font-size: 0.9em; margin-bottom: 5px;">Высота:</label>
+                                <input 
+                                    type="number" 
+                                    id="height" 
+                                    name="height" 
+                                    value="1024" 
+                                    min="256" 
+                                    max="2048" 
+                                    step="64"
+                                    style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px;"
+                                >
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <button type="button" id="presetBtn" style="background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-size: 12px; cursor: pointer; margin-right: 10px;">Быстрые размеры</button>
+                            <span id="presetOptions" style="display: none;">
+                                <button type="button" class="preset-size" data-width="512" data-height="512" style="background: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 5px;">512×512</button>
+                                <button type="button" class="preset-size" data-width="768" data-height="768" style="background: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 5px;">768×768</button>
+                                <button type="button" class="preset-size" data-width="1024" data-height="1024" style="background: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 5px;">1024×1024</button>
+                                <button type="button" class="preset-size" data-width="1024" data-height="768" style="background: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 5px;">1024×768</button>
+                                <button type="button" class="preset-size" data-width="768" data-height="1024" style="background: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 5px;">768×1024</button>
+                            </span>
+                        </div>
+                    </div>
                     <button type="submit" class="btn" id="generateBtn">
                         🚀 Сгенерировать изображение
                     </button>
@@ -340,16 +382,50 @@
         const resultInfo = document.getElementById('resultInfo');
         const downloadLink = document.getElementById('downloadLink');
         const gallery = document.getElementById('gallery');
+        const widthInput = document.getElementById('width');
+        const heightInput = document.getElementById('height');
+        const presetBtn = document.getElementById('presetBtn');
+        const presetOptions = document.getElementById('presetOptions');
 
         // Загрузка галереи при загрузке страницы
         window.addEventListener('load', loadGallery);
+
+        // Обработка кнопки быстрых размеров
+        presetBtn.addEventListener('click', () => {
+            presetOptions.style.display = presetOptions.style.display === 'none' ? 'inline' : 'none';
+        });
+
+        // Обработка выбора быстрого размера
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('preset-size')) {
+                const width = e.target.dataset.width;
+                const height = e.target.dataset.height;
+                widthInput.value = width;
+                heightInput.value = height;
+                presetOptions.style.display = 'none';
+            }
+        });
 
         // Обработка формы генерации
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const prompt = document.getElementById('prompt').value.trim();
+            const width = parseInt(widthInput.value);
+            const height = parseInt(heightInput.value);
+            
             if (!prompt) return;
+            
+            // Валидация размеров
+            if (width < 256 || width > 2048 || height < 256 || height > 2048) {
+                showError('Размеры должны быть от 256 до 2048 пикселей');
+                return;
+            }
+            
+            if (width % 64 !== 0 || height % 64 !== 0) {
+                showError('Размеры должны быть кратны 64 пикселям');
+                return;
+            }
 
             // Показываем загрузку
             generateBtn.disabled = true;
@@ -363,7 +439,11 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ prompt: prompt })
+                    body: JSON.stringify({ 
+                        prompt: prompt,
+                        width: width,
+                        height: height
+                    })
                 });
 
                 const data = await response.json();
@@ -382,6 +462,10 @@
                         <div class="info-item">
                             <div class="info-label">Размер файла</div>
                             <div class="info-value">${Math.round(data.file_size / 1024)} KB</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Размеры изображения</div>
+                            <div class="info-value">${data.width} × ${data.height} px</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label">Промпт</div>
@@ -423,7 +507,9 @@
                             <div class="gallery-item-info">
                                 <h4>${img.filename}</h4>
                                 <p>Создано: ${img.created}</p>
-                                <p>Размер: ${Math.round(img.size / 1024)} KB</p>
+                                <p>Размер файла: ${Math.round(img.size / 1024)} KB</p>
+                                <p>Размеры: ${img.width} × ${img.height} px</p>
+                                <p>Промпт: ${img.prompt}</p>
                                 <a href="/download/${img.filename}" class="download-btn" style="margin-top: 10px; display: inline-block;">Скачать</a>
                             </div>
                         </div>
