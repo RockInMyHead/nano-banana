@@ -10,7 +10,7 @@ import time
 import json
 from datetime import datetime
 from dotenv import load_dotenv
-from PIL import Image, ImageOps
+from PIL import Image
 from io import BytesIO
 
 # Загружаем переменные из .env файла
@@ -24,8 +24,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 # Конфигурация Gemini API
-GEMINI_MODEL = "gemini-2.5-flash-image-preview"
-GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+GEMINI_MODEL = "gemini-2.5-flash-exp-image-generation"
+GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateImage"
 API_KEY = os.getenv("GEMINI_API_KEY") or "AIzaSyBL4M9-oP8JnUoy550h1iHSaUdFzU6MC-k"
 
 # Папка для сохранения изображений
@@ -79,18 +79,20 @@ async def generate(request: Request):
     try:
         data = await request.json()
         prompt = data.get("prompt")
+        width = data.get("width", 1024)
+        height = data.get("height", 1024)
         if not prompt:
             return JSONResponse({"error": "Prompt missing"}, status_code=400)
 
         # Формируем тело запроса для Gemini API
         payload = {
             "contents": [
-                {
-                    "parts": [
-                        { "text": prompt }
-                    ]
-                }
-            ]
+                { "parts": [{ "text": prompt }] },
+            ],
+            "generationConfig": {
+                "responseModalities": ["Image"],
+                "imageGenerationConfig": { "width": width, "height": height }
+            }
         }
 
         headers = {
@@ -149,14 +151,8 @@ async def save_image(request: Request):
         # Обрабатываем изображение с помощью PIL
         try:
             with Image.open(BytesIO(image_data)) as img:
-                # Конвертируем в RGB если нужно
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
-
-                # Изменяем размер изображения с сохранением пропорций и обрезкой по центру
-                img = ImageOps.fit(img, (width, height), Image.LANCZOS)
-
-                # Сохраняем как PNG
                 img.save(filepath, 'PNG')
                 actual_width, actual_height = img.size
                 

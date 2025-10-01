@@ -172,7 +172,7 @@ function displayGallery(images) {
     gallery.innerHTML = images.map(image => `
         <div class="gallery-item">
             <img src="/generated_images/${image.filename}" alt="${image.prompt}" 
-                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuKEliDQt9C90LDRh9C10L3QuNC1INC40L3RgtC10YDQtdC90L3QvtCz0L4g0L/RgNC+0LTQvtC70L7QstC+0LrQsA==</text></svg>'">
+                 onerror="this.onerror=null;this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII='">
             <div class="gallery-item-info">
                 <h4>${truncateText(image.prompt, 50)}</h4>
                 <p><strong>Размер:</strong> ${image.width} × ${image.height}</p>
