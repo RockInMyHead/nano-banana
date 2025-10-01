@@ -114,7 +114,8 @@ function displayGeneratedImage(imageB64, imageInfo) {
     const resultSection = document.getElementById('resultSection');
     const resultDiv = document.getElementById('result');
     
-    const imageUrl = `data:image/png;base64,${imageB64}`;
+    // Используем сохранённый файл для отображения с учетом ресайза
+    const imageUrl = `/generated_images/${imageInfo.filename}`;
     
     resultDiv.innerHTML = `
         <img src="${imageUrl}" alt="Сгенерированное изображение" class="generated-image">

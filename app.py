@@ -10,7 +10,7 @@ import time
 import json
 from datetime import datetime
 from dotenv import load_dotenv
-from PIL import Image
+from PIL import Image, ImageOps
 from io import BytesIO
 
 # Загружаем переменные из .env файла
@@ -152,7 +152,10 @@ async def save_image(request: Request):
                 # Конвертируем в RGB если нужно
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
-                
+
+                # Изменяем размер изображения с сохранением пропорций и обрезкой по центру
+                img = ImageOps.fit(img, (width, height), Image.LANCZOS)
+
                 # Сохраняем как PNG
                 img.save(filepath, 'PNG')
                 actual_width, actual_height = img.size
