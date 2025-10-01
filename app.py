@@ -1,12 +1,32 @@
-from flask import Flask, render_template, request, jsonify, send_file, send_from_directory
-import requests
-import time
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse, HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 import os
+import httpx
+import base64
 import uuid
+import time
 import json
 from datetime import datetime
+from dotenv import load_dotenv
+from PIL import Image
+from io import BytesIO
 
-app = Flask(__name__)
+# Загружаем переменные из .env файла
+load_dotenv()
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+# Конфигурация Gemini API
+GEMINI_MODEL = "gemini-2.5-flash-image-preview"
+GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+API_KEY = os.getenv("GEMINI_API_KEY") or "AIzaSyBL4M9-oP8JnUoy550h1iHSaUdFzU6MC-k"
 
 # Папка для сохранения изображений
 UPLOAD_FOLDER = 'generated_images'
@@ -31,155 +51,209 @@ def save_metadata(metadata):
         with open(METADATA_FILE, 'w', encoding='utf-8') as f:
             json.dump(metadata, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        print(f"Ошибка сохранения метаданных: {e}")
+        logger.error(f"Ошибка сохранения метаданных: {e}")
 
-def add_image_metadata(filename, width, height, prompt):
+def add_image_metadata(filename, width, height, prompt, model, generation_time):
     """Добавляет метаданные для нового изображения"""
     metadata = load_metadata()
     metadata[filename] = {
         'width': width,
         'height': height,
         'prompt': prompt,
+        'model': model,
+        'generation_time': generation_time,
         'created': datetime.now().isoformat()
     }
     save_metadata(metadata)
 
-def generate_image_fast(prompt, width=1024, height=1024):
-    """
-    Быстрая генерация изображения через Pollinations AI
-    """
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+@app.post("/generate")
+async def generate(request: Request):
+    if API_KEY is None:
+        logger.error("GEMINI_API_KEY not set")
+        return JSONResponse({"error": "Server misconfiguration: GEMINI_API_KEY not set"}, status_code=500)
+    
     try:
-        # URL-кодируем промпт для безопасной передачи
-        import urllib.parse
-        encoded_prompt = urllib.parse.quote(prompt)
-        url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width={width}&height={height}&nologo=true"
-        
-        start_time = time.time()
-        response = requests.get(url, timeout=30)  # Увеличиваем таймаут для больших изображений
-        end_time = time.time()
-        generation_time = end_time - start_time
-        
-        if response.status_code == 200:
-            return response.content, generation_time, None
-        else:
-            return None, generation_time, f"API ошибка: {response.status_code}"
-            
-    except Exception as e:
-        return None, 0, str(e)
-
-@app.route('/')
-def index():
-    """Главная страница"""
-    return render_template('index.html')
-
-@app.route('/favicon.ico')
-def favicon():
-    """Favicon для избежания ошибки 404"""
-    return '', 204
-
-@app.route('/generate', methods=['POST'])
-def generate_image():
-    """API для генерации изображения"""
-    try:
-        data = request.get_json()
-        prompt = data.get('prompt', '').strip()
-        width = data.get('width', 1024)
-        height = data.get('height', 1024)
-        
+        data = await request.json()
+        prompt = data.get("prompt")
         if not prompt:
-            return jsonify({'error': 'Промпт не может быть пустым'}), 400
+            return JSONResponse({"error": "Prompt missing"}, status_code=400)
+
+        # Формируем тело запроса для Gemini API
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        { "text": prompt }
+                    ]
+                }
+            ]
+        }
+
+        headers = {
+            "Content-Type": "application/json",
+            "x-goog-api-key": API_KEY
+        }
+
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(GEMINI_URL, headers=headers, json=payload, timeout=60)
+            resp.raise_for_status()
+            resp_json = resp.json()
+            logger.info(f"Gemini response: {resp_json}")
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP error: {e.response.status_code} - {e.response.text}")
+        return JSONResponse({"error": f"HTTP Error: {e.response.status_code} — {e.response.text}"}, status_code=500)
+    except Exception as e:
+        logger.exception("Unexpected error in generate")
+        return JSONResponse({"error": f"Internal error: {str(e)}"}, status_code=500)
+
+    # Разбор ответа
+    # ищем первую часть с inline_data — это изображение
+    for candidate in resp_json.get("candidates", []):
+        for part in candidate.get("content", {}).get("parts", []):
+            inline = part.get("inlineData") or part.get("inline_data")
+            if inline and inline.get("data"):
+                # данные base64
+                img_b64 = inline["data"]
+                # чтобы передать на фронт, можно вернуть base64 строку
+                return JSONResponse({"image_b64": img_b64})
+
+    return JSONResponse({"error": "No image in response"}, status_code=500)
+
+@app.post("/save_image")
+async def save_image(request: Request):
+    """Сохраняет изображение из base64 на сервере"""
+    try:
+        data = await request.json()
+        image_b64 = data.get("image_b64")
+        prompt = data.get("prompt", "Unknown prompt")
+        width = data.get("width", 1024)
+        height = data.get("height", 1024)
         
-        # Валидация размеров
-        if not isinstance(width, int) or not isinstance(height, int):
-            return jsonify({'error': 'Размеры должны быть целыми числами'}), 400
-            
-        if width < 256 or width > 2048 or height < 256 or height > 2048:
-            return jsonify({'error': 'Размеры должны быть от 256 до 2048 пикселей'}), 400
-            
-        if width % 64 != 0 or height % 64 != 0:
-            return jsonify({'error': 'Размеры должны быть кратны 64 пикселям'}), 400
+        if not image_b64:
+            return JSONResponse({"error": "No image data provided"}, status_code=400)
         
-        # Генерируем изображение
-        image_data, gen_time, error = generate_image_fast(prompt, width, height)
+        # Декодируем base64
+        try:
+            image_data = base64.b64decode(image_b64)
+        except Exception as e:
+            return JSONResponse({"error": f"Invalid base64 data: {str(e)}"}, status_code=400)
         
-        if error:
-            return jsonify({'error': f'Ошибка генерации: {error}'}), 500
-        
-        # Сохраняем изображение
+        # Создаем уникальное имя файла
         filename = f"image_{uuid.uuid4().hex[:8]}_{int(time.time())}.png"
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         
-        with open(filepath, 'wb') as f:
-            f.write(image_data)
+        # Обрабатываем изображение с помощью PIL
+        try:
+            with Image.open(BytesIO(image_data)) as img:
+                # Конвертируем в RGB если нужно
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
+                
+                # Сохраняем как PNG
+                img.save(filepath, 'PNG')
+                actual_width, actual_height = img.size
+                
+        except Exception as e:
+            # Если PIL не может обработать, сохраняем как есть
+            with open(filepath, 'wb') as f:
+                f.write(image_data)
+            actual_width, actual_height = width, height
         
-        # Сохраняем метаданные
-        add_image_metadata(filename, width, height, prompt)
+        # Добавляем метаданные
+        generation_time = 0  # Время генерации уже прошло
+        add_image_metadata(filename, actual_width, actual_height, prompt, "Gemini 2.5 Flash", generation_time)
         
-        return jsonify({
-            'success': True,
-            'filename': filename,
-            'generation_time': round(gen_time, 2),
-            'file_size': len(image_data),
-            'width': width,
-            'height': height,
-            'prompt': prompt
+        # Размер файла
+        file_size = os.path.getsize(filepath)
+        
+        return JSONResponse({
+            "success": True,
+            "filename": filename,
+            "width": actual_width,
+            "height": actual_height,
+            "model": "Gemini 2.5 Flash",
+            "generation_time": generation_time,
+            "file_size": file_size,
+            "prompt": prompt,
+            "created": datetime.now().isoformat()
         })
         
     except Exception as e:
-        return jsonify({'error': f'Серверная ошибка: {str(e)}'}), 500
+        logger.exception("Error saving image")
+        return JSONResponse({"error": f"Error saving image: {str(e)}"}, status_code=500)
 
-@app.route('/generated_images/<filename>')
-def serve_image(filename):
-    """Обслуживание изображений для отображения"""
+@app.get("/images")
+async def list_images():
+    """Возвращает список всех сгенерированных изображений"""
     try:
-        return send_from_directory(UPLOAD_FOLDER, filename)
-    except Exception as e:
-        return jsonify({'error': f'Ошибка загрузки изображения: {str(e)}'}), 404
-
-@app.route('/download/<filename>')
-def download_image(filename):
-    """Скачивание изображения"""
-    try:
-        filepath = os.path.join(UPLOAD_FOLDER, filename)
-        if os.path.exists(filepath):
-            return send_file(filepath, as_attachment=True, download_name=filename)
-        else:
-            return jsonify({'error': 'Файл не найден'}), 404
-    except Exception as e:
-        return jsonify({'error': f'Ошибка скачивания: {str(e)}'}), 500
-
-@app.route('/images')
-def list_images():
-    """Список всех сгенерированных изображений"""
-    try:
-        images = []
         metadata = load_metadata()
+        images = []
         
         for filename in os.listdir(UPLOAD_FOLDER):
             if filename.endswith('.png'):
                 filepath = os.path.join(UPLOAD_FOLDER, filename)
-                stat = os.stat(filepath)
-                
-                # Получаем метаданные для этого изображения
-                img_metadata = metadata.get(filename, {})
-                
-                images.append({
-                    'filename': filename,
-                    'size': stat.st_size,
-                    'created': datetime.fromtimestamp(stat.st_ctime).strftime('%Y-%m-%d %H:%M:%S'),
-                    'width': img_metadata.get('width', 'Неизвестно'),
-                    'height': img_metadata.get('height', 'Неизвестно'),
-                    'prompt': img_metadata.get('prompt', 'Неизвестно')
-                })
+                if os.path.isfile(filepath):
+                    file_size = os.path.getsize(filepath)
+                    
+                    # Получаем метаданные
+                    img_metadata = metadata.get(filename, {})
+                    
+                    images.append({
+                        'filename': filename,
+                        'size': file_size,
+                        'width': img_metadata.get('width', 'Unknown'),
+                        'height': img_metadata.get('height', 'Unknown'),
+                        'prompt': img_metadata.get('prompt', 'Unknown'),
+                        'model': img_metadata.get('model', 'Unknown'),
+                        'generation_time': img_metadata.get('generation_time', 0),
+                        'created': img_metadata.get('created', 'Unknown')
+                    })
         
         # Сортируем по дате создания (новые сначала)
         images.sort(key=lambda x: x['created'], reverse=True)
-        return jsonify({'images': images})
+        
+        return JSONResponse({'images': images})
         
     except Exception as e:
-        return jsonify({'error': f'Ошибка получения списка: {str(e)}'}), 500
+        logger.exception("Error listing images")
+        return JSONResponse({"error": f"Error listing images: {str(e)}"}, status_code=500)
 
-if __name__ == '__main__':
+@app.get("/generated_images/{filename}")
+async def serve_image(filename: str):
+    """Отдает изображение по имени файла"""
+    try:
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        if os.path.exists(filepath):
+            return FileResponse(filepath)
+        else:
+            raise HTTPException(status_code=404, detail="Image not found")
+    except Exception as e:
+        logger.exception(f"Error serving image {filename}")
+        raise HTTPException(status_code=500, detail=f"Error serving image: {str(e)}")
+
+@app.get("/download/{filename}")
+async def download_image(filename: str):
+    """Скачивание изображения"""
+    try:
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        if os.path.exists(filepath):
+            return FileResponse(
+                filepath, 
+                media_type='application/octet-stream',
+                filename=filename
+            )
+        else:
+            raise HTTPException(status_code=404, detail="File not found")
+    except Exception as e:
+        logger.exception(f"Error downloading image {filename}")
+        raise HTTPException(status_code=500, detail=f"Error downloading image: {str(e)}")
+
+if __name__ == "__main__":
+    import uvicorn
     print("🚀 Запуск веб-сервиса генерации изображений...")
-    print("📱 Откройте браузер: http://localhost:5001")
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    print("📱 Откройте браузер: http://localhost:8083")
+    uvicorn.run(app, host="0.0.0.0", port=8083)

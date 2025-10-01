@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎨 Генератор Изображений AI</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+    <title>Генератор изображений - NanaBanana</title>
+  <script src="/static/script.js" defer></script>
     <style>
         * {
             margin: 0;
@@ -38,6 +38,7 @@
         .header h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .header p {
@@ -49,62 +50,65 @@
             padding: 40px;
         }
 
-        .form-section {
+        .generator-section {
             background: #f8f9fa;
-            padding: 30px;
             border-radius: 15px;
+            padding: 30px;
             margin-bottom: 30px;
+            border: 2px solid #e9ecef;
         }
 
         .form-group {
             margin-bottom: 20px;
         }
 
-        label {
+        .form-group label {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
             color: #333;
         }
 
-        input[type="text"], textarea {
+        .form-group input, .form-group select {
             width: 100%;
-            padding: 15px;
-            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
             border-radius: 10px;
             font-size: 16px;
             transition: border-color 0.3s;
         }
 
-        input[type="text"]:focus, textarea:focus {
+        .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: #667eea;
         }
 
-        textarea {
-            resize: vertical;
-            min-height: 100px;
+        .size-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
         }
 
-        .btn {
+        .generate-btn {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
             padding: 15px 30px;
             border-radius: 10px;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
             width: 100%;
         }
 
-        .btn:hover {
+        .generate-btn:hover {
             transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
 
-        .btn:disabled {
-            opacity: 0.6;
+        .generate-btn:disabled {
+            background: #ccc;
             cursor: not-allowed;
             transform: none;
         }
@@ -122,7 +126,7 @@
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
+            margin: 0 auto 10px;
         }
 
         @keyframes spin {
@@ -130,106 +134,106 @@
             100% { transform: rotate(360deg); }
         }
 
-        .result {
-            display: none;
+        .result-section {
+            margin-top: 30px;
             text-align: center;
-            padding: 30px;
-            background: #f8f9fa;
-            border-radius: 15px;
-            margin-top: 20px;
         }
 
-        .result img {
+        .generated-image {
             max-width: 100%;
-            height: auto;
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin: 20px 0;
         }
 
-        .result-info {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        .result-info h3 {
-            color: #333;
-            margin-bottom: 15px;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .info-item {
+        .image-info {
             background: #f8f9fa;
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 10px;
+            margin: 15px 0;
             text-align: left;
         }
 
-        .info-label {
-            font-weight: 600;
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .info-value {
+        .image-info h3 {
             color: #333;
-            font-size: 1.1em;
-            margin-top: 5px;
+            margin-bottom: 10px;
         }
 
-        .download-btn {
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            text-decoration: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-weight: 600;
-            display: inline-block;
-            transition: transform 0.2s;
+        .image-info p {
+            margin: 5px 0;
+            color: #666;
         }
 
-        .download-btn:hover {
-            transform: translateY(-2px);
-            color: white;
-            text-decoration: none;
-        }
-
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
             margin-top: 20px;
-            display: none;
         }
 
-        .gallery {
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .gallery-section {
             margin-top: 40px;
         }
 
-        .gallery h2 {
-            text-align: center;
-            margin-bottom: 30px;
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .gallery-header h2 {
             color: #333;
+        }
+
+        .refresh-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
         }
 
         .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
         }
 
         .gallery-item {
             background: white;
-            border-radius: 10px;
+            border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             transition: transform 0.2s;
@@ -252,11 +256,42 @@
         .gallery-item-info h4 {
             color: #333;
             margin-bottom: 10px;
+            font-size: 14px;
         }
 
         .gallery-item-info p {
+            font-size: 12px;
             color: #666;
-            font-size: 0.9em;
+            margin: 3px 0;
+        }
+
+        .gallery-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .gallery-actions .btn {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #c3e6cb;
         }
 
         @media (max-width: 768px) {
@@ -269,8 +304,12 @@
                 padding: 20px;
             }
             
-            .header h1 {
-                font-size: 2em;
+            .size-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .gallery-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -278,249 +317,65 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎨 AI Генератор Изображений</h1>
-            <p>Создавайте уникальные изображения с помощью искусственного интеллекта</p>
+            <h1>🎨 NanaBanana Generator</h1>
+            <p>Создавайте уникальные изображения с помощью ИИ</p>
         </div>
 
         <div class="main-content">
-            <div class="form-section">
-                <h2>✨ Создать новое изображение</h2>
-                <form id="generateForm">
+            <div class="generator-section">
+                <h2>Создать новое изображение</h2>
+                
+                <div class="form-group">
+                    <label for="prompt">Описание изображения:</label>
+                    <input type="text" id="prompt" placeholder="Например: красивый закат над океаном, цифровое искусство" maxlength="500">
+                </div>
+
+                <div class="size-controls">
                     <div class="form-group">
-                        <label for="prompt">Опишите, что вы хотите увидеть:</label>
-                        <textarea 
-                            id="prompt" 
-                            name="prompt" 
-                            placeholder="Например: Hogwarts castle, magical school, Harry Potter, magnificent gothic architecture, towering spires, colorful stained glass windows, golden hour lighting..."
-                            required
-                        ></textarea>
+                        <label for="width">Ширина (пиксели):</label>
+                        <select id="width">
+                            <option value="512">512px</option>
+                            <option value="768">768px</option>
+                            <option value="1024" selected>1024px</option>
+                            <option value="1280">1280px</option>
+                            <option value="1536">1536px</option>
+                        </select>
                     </div>
-                    
                     <div class="form-group">
-                        <label>Размер изображения (в пикселях):</label>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <div>
-                                <label for="width" style="font-size: 0.9em; margin-bottom: 5px;">Ширина:</label>
-                                <input 
-                                    type="number" 
-                                    id="width" 
-                                    name="width" 
-                                    value="1024" 
-                                    min="256" 
-                                    max="2048" 
-                                    step="64"
-                                    style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px;"
-                                >
-                            </div>
-                            <div>
-                                <label for="height" style="font-size: 0.9em; margin-bottom: 5px;">Высота:</label>
-                                <input 
-                                    type="number" 
-                                    id="height" 
-                                    name="height" 
-                                    value="1024" 
-                                    min="256" 
-                                    max="2048" 
-                                    step="64"
-                                    style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px;"
-                                >
-                            </div>
-                        </div>
-                        <div style="margin-top: 10px;">
-                            <button type="button" id="presetBtn" style="background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-size: 12px; cursor: pointer; margin-right: 10px;">Быстрые размеры</button>
-                            <span id="presetOptions" style="display: none;">
-                                <button type="button" class="preset-size" data-width="512" data-height="512" style="background: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 5px;">512×512</button>
-                                <button type="button" class="preset-size" data-width="768" data-height="768" style="background: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 5px;">768×768</button>
-                                <button type="button" class="preset-size" data-width="1024" data-height="1024" style="background: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 5px;">1024×1024</button>
-                                <button type="button" class="preset-size" data-width="1024" data-height="768" style="background: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 5px;">1024×768</button>
-                                <button type="button" class="preset-size" data-width="768" data-height="1024" style="background: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-right: 5px;">768×1024</button>
-                            </span>
-                        </div>
+                        <label for="height">Высота (пиксели):</label>
+                        <select id="height">
+                            <option value="512">512px</option>
+                            <option value="768">768px</option>
+                            <option value="1024" selected>1024px</option>
+                            <option value="1280">1280px</option>
+                            <option value="1536">1536px</option>
+                        </select>
                     </div>
-                    <button type="submit" class="btn" id="generateBtn">
-                        🚀 Сгенерировать изображение
-                    </button>
-                </form>
+                </div>
+
+                <button class="generate-btn" onclick="generateImage()" id="generateBtn">
+                    🚀 Сгенерировать изображение
+                </button>
 
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
-                    <p>Генерируем ваше изображение... Это может занять несколько секунд</p>
-                </div>
-
-                <div class="error" id="error"></div>
-
-                <div class="result" id="result">
-                    <h3>🎉 Ваше изображение готово!</h3>
-                    <div class="result-info">
-                        <div class="info-grid" id="resultInfo">
-                            <!-- Информация о результате будет добавлена динамически -->
-                        </div>
-                    </div>
-                    <img id="resultImage" src="" alt="Сгенерированное изображение">
-                    <br>
-                    <a href="#" id="downloadLink" class="download-btn">📥 Скачать изображение</a>
+                    <p>Генерируем изображение... Это может занять несколько секунд</p>
                 </div>
             </div>
 
-            <div class="gallery">
-                <h2>🖼️ Галерея изображений</h2>
-                <div class="gallery-grid" id="gallery">
-                    <!-- Галерея будет загружена динамически -->
+            <div class="result-section" id="resultSection" style="display: none;">
+                <h2>Результат генерации</h2>
+  <div id="result"></div>
+            </div>
+
+            <div class="gallery-section">
+                <div class="gallery-header">
+                    <h2>🖼️ Галерея изображений</h2>
+                    <button class="refresh-btn" onclick="loadGallery()">🔄 Обновить</button>
                 </div>
+                <div class="gallery-grid" id="gallery"></div>
             </div>
         </div>
     </div>
-
-    <script>
-        // Элементы DOM
-        const form = document.getElementById('generateForm');
-        const generateBtn = document.getElementById('generateBtn');
-        const loading = document.getElementById('loading');
-        const result = document.getElementById('result');
-        const error = document.getElementById('error');
-        const resultImage = document.getElementById('resultImage');
-        const resultInfo = document.getElementById('resultInfo');
-        const downloadLink = document.getElementById('downloadLink');
-        const gallery = document.getElementById('gallery');
-        const widthInput = document.getElementById('width');
-        const heightInput = document.getElementById('height');
-        const presetBtn = document.getElementById('presetBtn');
-        const presetOptions = document.getElementById('presetOptions');
-
-        // Загрузка галереи при загрузке страницы
-        window.addEventListener('load', loadGallery);
-
-        // Обработка кнопки быстрых размеров
-        presetBtn.addEventListener('click', () => {
-            presetOptions.style.display = presetOptions.style.display === 'none' ? 'inline' : 'none';
-        });
-
-        // Обработка выбора быстрого размера
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('preset-size')) {
-                const width = e.target.dataset.width;
-                const height = e.target.dataset.height;
-                widthInput.value = width;
-                heightInput.value = height;
-                presetOptions.style.display = 'none';
-            }
-        });
-
-        // Обработка формы генерации
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const prompt = document.getElementById('prompt').value.trim();
-            const width = parseInt(widthInput.value);
-            const height = parseInt(heightInput.value);
-            
-            if (!prompt) return;
-            
-            // Валидация размеров
-            if (width < 256 || width > 2048 || height < 256 || height > 2048) {
-                showError('Размеры должны быть от 256 до 2048 пикселей');
-                return;
-            }
-            
-            if (width % 64 !== 0 || height % 64 !== 0) {
-                showError('Размеры должны быть кратны 64 пикселям');
-                return;
-            }
-
-            // Показываем загрузку
-            generateBtn.disabled = true;
-            loading.style.display = 'block';
-            result.style.display = 'none';
-            error.style.display = 'none';
-
-            try {
-                const response = await fetch('/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ 
-                        prompt: prompt,
-                        width: width,
-                        height: height
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Показываем результат
-                    resultImage.src = `/generated_images/${data.filename}`;
-                    downloadLink.href = `/download/${data.filename}`;
-                    
-                    // Заполняем информацию о результате
-                    resultInfo.innerHTML = `
-                        <div class="info-item">
-                            <div class="info-label">Время генерации</div>
-                            <div class="info-value">${data.generation_time} сек</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Размер файла</div>
-                            <div class="info-value">${Math.round(data.file_size / 1024)} KB</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Размеры изображения</div>
-                            <div class="info-value">${data.width} × ${data.height} px</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Промпт</div>
-                            <div class="info-value">${data.prompt}</div>
-                        </div>
-                    `;
-                    
-                    result.style.display = 'block';
-                    
-                    // Обновляем галерею
-                    loadGallery();
-                } else {
-                    showError(data.error || 'Произошла ошибка при генерации');
-                }
-            } catch (err) {
-                showError('Ошибка соединения с сервером');
-            } finally {
-                generateBtn.disabled = false;
-                loading.style.display = 'none';
-            }
-        });
-
-        // Функция показа ошибки
-        function showError(message) {
-            error.textContent = message;
-            error.style.display = 'block';
-        }
-
-        // Загрузка галереи
-        async function loadGallery() {
-            try {
-                const response = await fetch('/images');
-                const data = await response.json();
-                
-                if (data.images && data.images.length > 0) {
-                    gallery.innerHTML = data.images.map(img => `
-                        <div class="gallery-item">
-                            <img src="/generated_images/${img.filename}" alt="Сгенерированное изображение">
-                            <div class="gallery-item-info">
-                                <h4>${img.filename}</h4>
-                                <p>Создано: ${img.created}</p>
-                                <p>Размер файла: ${Math.round(img.size / 1024)} KB</p>
-                                <p>Размеры: ${img.width} × ${img.height} px</p>
-                                <p>Промпт: ${img.prompt}</p>
-                                <a href="/download/${img.filename}" class="download-btn" style="margin-top: 10px; display: inline-block;">Скачать</a>
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    gallery.innerHTML = '<p style="text-align: center; color: #666;">Пока нет изображений</p>';
-                }
-            } catch (err) {
-                console.error('Ошибка загрузки галереи:', err);
-            }
-        }
-    </script>
 </body>
 </html>

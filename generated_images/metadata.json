@@ -1,0 +1,218 @@
+{
+  "image_52cba1f3_1758922912.png": {
+    "width": 2048,
+    "height": 2048,
+    "prompt": "Машина",
+    "created": "2025-09-26T14:41:52.124289"
+  },
+  "image_50c17fd9_1758922935.png": {
+    "width": 2048,
+    "height": 256,
+    "prompt": "Машина",
+    "created": "2025-09-26T14:42:15.862857"
+  },
+  "image_cdded2da_1758923494.png": {
+    "width": 1024,
+    "height": 1024,
+    "prompt": "машина",
+    "created": "2025-09-26T14:51:34.124695"
+  },
+  "image_48db24f8_1758923511.png": {
+    "width": 1024,
+    "height": 1024,
+    "prompt": "car",
+    "created": "2025-09-26T14:51:51.532719"
+  },
+  "image_2c92146e_1758998514.png": {
+    "width": 1024,
+    "height": 1024,
+    "prompt": "машина",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 0.6808497905731201,
+    "created": "2025-09-27T11:41:54.120747"
+  },
+  "image_18cdb1f1_1759008786.png": {
+    "width": 1024,
+    "height": 1024,
+    "prompt": "Россия",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 0.9613902568817139,
+    "created": "2025-09-27T14:33:06.787437"
+  },
+  "image_deb1e4ca_1759008805.png": {
+    "width": 1024,
+    "height": 1024,
+    "prompt": "США",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 5.327875137329102,
+    "created": "2025-09-27T14:33:25.971878"
+  },
+  "image_651f6313_1759035745.png": {
+    "width": 512,
+    "height": 512,
+    "prompt": "test API key",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 3.0803887844085693,
+    "created": "2025-09-27T22:02:25.122380"
+  },
+  "image_af1aa79a_1759036176.png": {
+    "width": 512,
+    "height": 512,
+    "prompt": "test new API key",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 2.7376320362091064,
+    "created": "2025-09-27T22:09:36.163348"
+  },
+  "image_89079155_1759036244.png": {
+    "width": 512,
+    "height": 512,
+    "prompt": "test API key c12070311bca1794c2fefa11449243c8",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 2.3766210079193115,
+    "created": "2025-09-27T22:10:44.959216"
+  },
+  "image_94f8eeed_1759036346.png": {
+    "width": 512,
+    "height": 512,
+    "prompt": "test new nano-banana API",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 2.708889961242676,
+    "created": "2025-09-27T22:12:26.297968"
+  },
+  "image_1c026bbe_1759036370.png": {
+    "width": 1024,
+    "height": 1024,
+    "prompt": "машина",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 0.6826941967010498,
+    "created": "2025-09-27T22:12:50.270881"
+  },
+  "image_2e865937_1759036417.png": {
+    "width": 512,
+    "height": 512,
+    "prompt": "test API key working",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 3.016274929046631,
+    "created": "2025-09-27T22:13:37.880502"
+  },
+  "image_22ffca4a_1759037804.png": {
+    "width": 512,
+    "height": 512,
+    "prompt": "test Pollinations API",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 7.433387994766235,
+    "created": "2025-09-27T22:36:44.902497"
+  },
+  "image_4a303d7e_1759038881.png": {
+    "width": 512,
+    "height": 512,
+    "prompt": "красивый закат",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 1.5258290767669678,
+    "created": "2025-09-27T22:54:41.627298"
+  },
+  "image_53a3faba_1759042685.png": {
+    "width": 1024,
+    "height": 1024,
+    "prompt": "море",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 0.7927596569061279,
+    "created": "2025-09-27T23:58:05.543364"
+  },
+  "image_71d465ed_1759042700.png": {
+    "width": 1024,
+    "height": 1024,
+    "prompt": "car on road",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 1.1840581893920898,
+    "created": "2025-09-27T23:58:20.304933"
+  },
+  "image_70ea6a94_1759042711.png": {
+    "width": 1024,
+    "height": 1024,
+    "prompt": "car on road space",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 2.0501182079315186,
+    "created": "2025-09-27T23:58:31.938325"
+  },
+  "image_44e6c48f_1759042726.png": {
+    "width": 1024,
+    "height": 1024,
+    "prompt": "car on red road",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 5.727735757827759,
+    "created": "2025-09-27T23:58:46.744213"
+  },
+  "image_83a0394f_1759042838.png": {
+    "width": 512,
+    "height": 512,
+    "prompt": "test nano-banana API with logging",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 1.748349905014038,
+    "created": "2025-09-28T00:00:38.354789"
+  },
+  "image_2e5855eb_1759042940.png": {
+    "width": 512,
+    "height": 512,
+    "prompt": "test nano-banana API fixed",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 4.906423091888428,
+    "created": "2025-09-28T00:02:20.926601"
+  },
+  "image_153b9b76_1759043018.png": {
+    "width": 512,
+    "height": 512,
+    "prompt": "test nano-banana after restart",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 1.8649048805236816,
+    "created": "2025-09-28T00:03:38.029118"
+  },
+  "image_985bdc66_1759044297.png": {
+    "width": 512,
+    "height": 512,
+    "prompt": "красивый закат над морем",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 1.173032283782959,
+    "created": "2025-09-28T00:24:57.943350"
+  },
+  "image_50dc468c_1759046382.png": {
+    "width": 1024,
+    "height": 1024,
+    "prompt": "школа",
+    "model": "Stable Diffusion XL 1.0 (Pollinations)",
+    "generation_time": 1.0671720504760742,
+    "created": "2025-09-28T00:59:42.493827"
+  },
+  "image_43a9082f_1759271662.png": {
+    "width": 1024,
+    "height": 1024,
+    "prompt": "машина",
+    "model": "Imagen 4.0",
+    "generation_time": 13.670392990112305,
+    "created": "2025-09-30T15:34:24.257892"
+  },
+  "image_466888b3_1759271851.png": {
+    "width": 1024,
+    "height": 1024,
+    "prompt": "машина",
+    "model": "Imagen 4.0",
+    "generation_time": 12.700287818908691,
+    "created": "2025-09-30T15:37:31.818422"
+  },
+  "image_cee08179_1759272335.png": {
+    "width": 1024,
+    "height": 1024,
+    "prompt": "МАШИНА",
+    "model": "Imagen 4.0",
+    "generation_time": 13.174679040908813,
+    "created": "2025-09-30T15:45:35.708036"
+  },
+  "image_d4540fb2_1759284552.png": {
+    "width": 1024,
+    "height": 1024,
+    "prompt": "машина",
+    "model": "Gemini 2.5 Flash",
+    "generation_time": 0,
+    "created": "2025-09-30T19:09:13.654652"
+  }
+}
