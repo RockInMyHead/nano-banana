@@ -83,6 +83,14 @@
             border-color: #667eea;
         }
 
+        .size-hint {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+        }
+
         .size-controls {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -333,23 +341,13 @@
                 <div class="size-controls">
                     <div class="form-group">
                         <label for="width">Ширина (пиксели):</label>
-                        <select id="width">
-                            <option value="512">512px</option>
-                            <option value="768">768px</option>
-                            <option value="1024" selected>1024px</option>
-                            <option value="1280">1280px</option>
-                            <option value="1536">1536px</option>
-                        </select>
+                        <input type="number" id="width" min="256" max="2048" step="64" value="1024" placeholder="1024">
+                        <small class="size-hint">От 256 до 2048, кратно 64</small>
                     </div>
                     <div class="form-group">
                         <label for="height">Высота (пиксели):</label>
-                        <select id="height">
-                            <option value="512">512px</option>
-                            <option value="768">768px</option>
-                            <option value="1024" selected>1024px</option>
-                            <option value="1280">1280px</option>
-                            <option value="1536">1536px</option>
-                        </select>
+                        <input type="number" id="height" min="256" max="2048" step="64" value="1024" placeholder="1024">
+                        <small class="size-hint">От 256 до 2048, кратно 64</small>
                     </div>
                 </div>
 

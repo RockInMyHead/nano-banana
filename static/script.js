@@ -19,6 +19,22 @@ async function generateImage() {
         return;
     }
     
+    // Валидация размеров
+    if (!width || !height) {
+        showError('Пожалуйста, укажите размеры изображения');
+        return;
+    }
+    
+    if (width < 256 || width > 2048 || height < 256 || height > 2048) {
+        showError('Размеры должны быть от 256 до 2048 пикселей');
+        return;
+    }
+    
+    if (width % 64 !== 0 || height % 64 !== 0) {
+        showError('Размеры должны быть кратны 64 пикселям');
+        return;
+    }
+    
     // Показываем загрузку
     showLoading(true);
     hideError();
@@ -317,6 +333,11 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
+// Функция для округления размера до кратного 64
+function roundToMultiple64(value) {
+    return Math.round(value / 64) * 64;
+}
+
 // Обработка Enter в поле ввода
 document.addEventListener('DOMContentLoaded', function() {
     const promptInput = document.getElementById('prompt');
@@ -324,6 +345,34 @@ document.addEventListener('DOMContentLoaded', function() {
         promptInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 generateImage();
+            }
+        });
+    }
+    
+    // Автоматическое округление размеров при вводе
+    const widthInput = document.getElementById('width');
+    const heightInput = document.getElementById('height');
+    
+    if (widthInput) {
+        widthInput.addEventListener('blur', function() {
+            const value = parseInt(this.value);
+            if (value && value % 64 !== 0) {
+                const rounded = roundToMultiple64(value);
+                this.value = rounded;
+                showSuccess(`Ширина округлена до ${rounded}px (кратно 64)`);
+                setTimeout(hideSuccess, 3000);
+            }
+        });
+    }
+    
+    if (heightInput) {
+        heightInput.addEventListener('blur', function() {
+            const value = parseInt(this.value);
+            if (value && value % 64 !== 0) {
+                const rounded = roundToMultiple64(value);
+                this.value = rounded;
+                showSuccess(`Высота округлена до ${rounded}px (кратно 64)`);
+                setTimeout(hideSuccess, 3000);
             }
         });
     }
