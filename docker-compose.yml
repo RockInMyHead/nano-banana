@@ -1,0 +1,15 @@
+services:
+  nanabanana:
+    build: .
+    container_name: nanabanana-app
+    ports:
+      - "8083:8083"
+    volumes:
+      # Монтируем папку с изображениями, чтобы они сохранялись локально
+      - ./generated_images:/app/generated_images
+    environment:
+      # API ключ можно указать здесь или в .env файле
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    env_file:
+      - .env
+    restart: unless-stopped

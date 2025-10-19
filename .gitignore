@@ -1,0 +1,69 @@
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Generated images (optional - uncomment if you don't want to track generated images)
+# generated_images/*.png
+# generated_images/*.jpg
+# generated_images/*.jpeg
+
+# Keep metadata but ignore large image files
+generated_images/*.png
+generated_images/*.jpg
+generated_images/*.jpeg
+!generated_images/metadata.json
+
+# Temporary files
+*.tmp
+*.temp
