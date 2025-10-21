@@ -167,12 +167,8 @@ async def fill_black_borders(img, prompt: str) -> Image.Image:
 
         # Настройки прокси
         proxy_url = "http://E31cha:hxycdk@45.147.183.125:8000"
-        proxies = {
-            "http://": proxy_url,
-            "https://": proxy_url
-        }
 
-        async with httpx.AsyncClient(proxies=proxies) as client:
+        async with httpx.AsyncClient(proxy=proxy_url) as client:
             resp = await client.post(GEMINI_URL, headers=headers, json=payload, timeout=60)
             resp.raise_for_status()
             resp_json = resp.json()
@@ -218,12 +214,8 @@ async def generate_image_with_retry(prompt: str, max_retries: int = 3) -> str:
 
             # Настройки прокси
             proxy_url = "http://E31cha:hxycdk@45.147.183.125:8000"
-            proxies = {
-                "http://": proxy_url,
-                "https://": proxy_url
-            }
             
-            async with httpx.AsyncClient(proxies=proxies) as client:
+            async with httpx.AsyncClient(proxy=proxy_url) as client:
                 resp = await client.post(GEMINI_URL, headers=headers, json=payload, timeout=60)
                 
                 if resp.status_code == 429:
