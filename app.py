@@ -165,7 +165,14 @@ async def fill_black_borders(img, prompt: str) -> Image.Image:
             "x-goog-api-key": API_KEY
         }
 
-        async with httpx.AsyncClient() as client:
+        # Настройки прокси
+        proxy_url = "http://E31cha:hxycdk@45.147.183.125:8000"
+        proxies = {
+            "http://": proxy_url,
+            "https://": proxy_url
+        }
+
+        async with httpx.AsyncClient(proxies=proxies) as client:
             resp = await client.post(GEMINI_URL, headers=headers, json=payload, timeout=60)
             resp.raise_for_status()
             resp_json = resp.json()
@@ -209,7 +216,14 @@ async def generate_image_with_retry(prompt: str, max_retries: int = 3) -> str:
                 "x-goog-api-key": API_KEY
             }
 
-            async with httpx.AsyncClient() as client:
+            # Настройки прокси
+            proxy_url = "http://E31cha:hxycdk@45.147.183.125:8000"
+            proxies = {
+                "http://": proxy_url,
+                "https://": proxy_url
+            }
+            
+            async with httpx.AsyncClient(proxies=proxies) as client:
                 resp = await client.post(GEMINI_URL, headers=headers, json=payload, timeout=60)
                 
                 if resp.status_code == 429:
