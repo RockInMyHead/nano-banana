@@ -66,6 +66,28 @@ def add_image_metadata(filename, width, height, prompt, model, generation_time):
     }
     save_metadata(metadata)
 
+def get_aspect_ratio(width, height):
+    """Определяет ближайшее допустимое соотношение сторон для Gemini API"""
+    # Допустимые соотношения сторон API
+    allowed = ['1:1','2:3','3:2','3:4','4:3','4:5','5:4','9:16','16:9','21:9']
+    # Текущее соотношение
+    target = width / height
+    # Вычисляем ближайшее значение
+    best = allowed[0]
+    best_diff = float('inf')
+    for ar in allowed:
+        a, b = map(int, ar.split(':'))
+        ratio = a / b
+        diff = abs(ratio - target)
+        if diff < best_diff:
+            best_diff = diff
+            best = ar
+    return best
+
+def generate_prompt_for_size(prompt: str, width: int, height: int) -> str:
+    """Генерирует расширенный промпт с указанием размера"""
+    return f"{prompt}\n\nIMPORTANT: Fill the entire frame completely. No black bars, no letterboxing, no pillarboxing. The image should extend to all edges of the canvas."
+
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -81,11 +103,34 @@ async def generate(request: Request):
         prompt = data.get("prompt")
         width = data.get("width", 1024)
         height = data.get("height", 1024)
+        ref_image = data.get("ref_image")
+        # Определяем аспект-рацию, возможно с использованием референс-изображения
+        if ref_image:
+            ref_path = os.path.join(UPLOAD_FOLDER, ref_image)
+            try:
+                with Image.open(ref_path) as img_ref:
+                    ref_w, ref_h = img_ref.size
+            except Exception:
+                return JSONResponse({"error": f"Reference image not found: {ref_image}"}, status_code=400)
+            aspect_ratio = get_aspect_ratio(ref_w, ref_h)
+            ref_instruction = "Use the uploaded image’s aspect ratio as the final frame; fill all its area; no letterboxing."
+            logger.info(f"Using reference image aspect ratio: {aspect_ratio}")
+        else:
+            aspect_ratio = get_aspect_ratio(width, height)
+            ref_instruction = "Fill the entire frame; no black bars or letterboxing."
+        
         if not prompt:
             return JSONResponse({"error": "Prompt missing"}, status_code=400)
 
-        # Формируем улучшенный промпт с указанием размера
-        enhanced_prompt = f"{prompt}\n\nСоздайте изображение размером {width}x{height} пикселей. Изображение должно точно соответствовать указанным размерам {width}x{height}."
+        # Генерируем расширенный промпт под размер изображения
+        enhanced_prompt = generate_prompt_for_size(prompt, width, height)
+        # Добавляем инструкцию по референс-изображению
+        if ref_instruction:
+            enhanced_prompt += f"\n\n{ref_instruction}"
+        
+        requested_ratio = width / height
+        logger.info(f"Requested size: {width}x{height} (ratio: {requested_ratio:.3f})")
+        logger.info(f"Using API aspect ratio: {aspect_ratio}")
         
         # Формируем тело запроса для Gemini API
         payload = {
@@ -95,7 +140,13 @@ async def generate(request: Request):
                         { "text": enhanced_prompt }
                     ]
                 }
-            ]
+            ],
+            "generationConfig": {
+                "imageConfig": {
+                    "aspectRatio": aspect_ratio
+                },
+                "responseModalities": ["IMAGE"]
+            }
         }
 
         headers = {
@@ -158,61 +209,31 @@ async def save_image(request: Request):
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
                 
-                # Получаем исходные размеры
+                # Получаем исходные размеры от API
                 original_width, original_height = img.size
-                logger.info(f"Original image size: {original_width}x{original_height}")
-                logger.info(f"Target size: {width}x{height}")
+                logger.info(f"Original image size from API: {original_width}x{original_height}")
+                logger.info(f"Requested size: {width}x{height}")
                 
-                # Проверяем, нужно ли изменять размер
-                if original_width != width or original_height != height:
-                    logger.info(f"Resizing image from {original_width}x{original_height} to {width}x{height}")
-                    
-                    # Масштабируем изображение с сохранением пропорций
-                    # Сначала определяем коэффициент масштабирования
-                    scale_w = width / original_width
-                    scale_h = height / original_height
-                    scale = min(scale_w, scale_h)  # Используем меньший коэффициент для сохранения пропорций
-                    
-                    # Убеждаемся, что изображение поместится в указанные размеры
-                    if scale > 1.0:
-                        scale = min(scale_w, scale_h)  # Не увеличиваем больше чем нужно
-                    else:
-                        scale = min(scale_w, scale_h)  # Уменьшаем если нужно
-                    
-                    # Вычисляем новые размеры
-                    new_width = int(original_width * scale)
-                    new_height = int(original_height * scale)
-                    
-                    logger.info(f"Scaling by factor {scale:.3f} to {new_width}x{new_height}")
-                    
-                    # Масштабируем изображение
-                    img = img.resize((new_width, new_height), Image.LANCZOS)
-                    
-                    # Создаем новое изображение нужного размера с белым фоном
-                    final_img = Image.new('RGB', (width, height), (255, 255, 255))
-                    
-                    # Вычисляем позицию для центрирования
-                    x_offset = (width - new_width) // 2
-                    y_offset = (height - new_height) // 2
-                    
-                    # Вставляем масштабированное изображение в центр
-                    final_img.paste(img, (x_offset, y_offset))
-                    img = final_img
-                    
-                    logger.info(f"Image scaled and centered to {width}x{height}")
-                else:
-                    logger.info("Image size matches target, no resizing needed")
+                # НЕ изменяем размер изображения от API!
+                # API уже сгенерировал изображение с оптимальным aspect ratio
+                # Изменение размера может привести к черным полосам или обрезанию
                 
-                # Сохраняем как PNG с максимальным качеством
+                # Сохраняем изображение как есть от API
                 img.save(filepath, 'PNG', optimize=True, quality=95)
                 actual_width, actual_height = img.size
-                logger.info(f"Final image size: {actual_width}x{actual_height}")
+                logger.info(f"Saved image with original API size: {actual_width}x{actual_height}")
                 
         except Exception as e:
             # Если PIL не может обработать, сохраняем как есть
+            logger.warning(f"PIL processing failed, saving raw data: {e}")
             with open(filepath, 'wb') as f:
                 f.write(image_data)
-            actual_width, actual_height = width, height
+            # Пытаемся определить размер
+            try:
+                with Image.open(filepath) as img:
+                    actual_width, actual_height = img.size
+            except:
+                actual_width, actual_height = width, height
         
         # Добавляем метаданные
         generation_time = 0  # Время генерации уже прошло
