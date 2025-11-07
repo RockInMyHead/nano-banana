@@ -167,7 +167,11 @@ function displayGallery(images) {
     gallery.innerHTML = images.map(image => `
         <div class="gallery-item">
             <img src="/generated_images/${image.filename}" alt="${image.prompt}" 
+<<<<<<< HEAD
                  onerror="this.onerror=null;this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII='">
+=======
+                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPuKEliDQt9C90LDRh9C10L3QuNC1INC40L3RgtC10YDQtdC90L3QvtCz0L4g0L/RgNC+0LTQvtC70L7QstC+0LrQsA==</text></svg>'">
+>>>>>>> 03d73daf58c1fca28a972b093ae4e025564d01e1
             <div class="gallery-item-info">
                 <h4>${truncateText(image.prompt, 50)}</h4>
                 <p><strong>Размер:</strong> ${image.width} × ${image.height}</p>
@@ -334,6 +338,7 @@ function roundToMultiple64(value) {
     return Math.round(value / 64) * 64;
 }
 
+<<<<<<< HEAD
 
 // Функция показа информации о размере
 function showSizeInfo(width, height) {
@@ -356,6 +361,8 @@ function showSizeInfo(width, height) {
     `;
 }
 
+=======
+>>>>>>> 03d73daf58c1fca28a972b093ae4e025564d01e1
 // Обработка Enter в поле ввода
 document.addEventListener('DOMContentLoaded', function() {
     const promptInput = document.getElementById('prompt');
@@ -373,18 +380,39 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (widthInput) {
         widthInput.addEventListener('blur', function() {
+<<<<<<< HEAD
             updateSizeInfo();
+=======
+            const value = parseInt(this.value);
+            if (value && value % 64 !== 0) {
+                const rounded = roundToMultiple64(value);
+                this.value = rounded;
+                showSuccess(`Ширина округлена до ${rounded}px (кратно 64)`);
+                setTimeout(hideSuccess, 3000);
+            }
+>>>>>>> 03d73daf58c1fca28a972b093ae4e025564d01e1
         });
     }
     
     if (heightInput) {
         heightInput.addEventListener('blur', function() {
+<<<<<<< HEAD
             updateSizeInfo();
+=======
+            const value = parseInt(this.value);
+            if (value && value % 64 !== 0) {
+                const rounded = roundToMultiple64(value);
+                this.value = rounded;
+                showSuccess(`Высота округлена до ${rounded}px (кратно 64)`);
+                setTimeout(hideSuccess, 3000);
+            }
+>>>>>>> 03d73daf58c1fca28a972b093ae4e025564d01e1
         });
     }
     
     // Загружаем галерею при загрузке страницы
     loadGallery();
+<<<<<<< HEAD
 });
 
 // Функция обновления информации о размере
@@ -396,3 +424,6 @@ function updateSizeInfo() {
         showSizeInfo(width, height);
     }
 }
+=======
+});
+>>>>>>> 03d73daf58c1fca28a972b093ae4e025564d01e1

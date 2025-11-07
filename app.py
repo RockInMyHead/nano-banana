@@ -12,7 +12,6 @@ from datetime import datetime
 from dotenv import load_dotenv
 from PIL import Image, ImageOps
 from io import BytesIO
-
 # Загружаем переменные из .env файла
 load_dotenv()
 import logging
@@ -27,7 +26,6 @@ templates = Jinja2Templates(directory="templates")
 GEMINI_MODEL = "gemini-2.5-flash-image-preview"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 API_KEY = os.getenv("GEMINI_API_KEY") or "AIzaSyABXLCOQx43FNOetOJNZNmxMhTmU33W7Rs"
-
 # Папка для сохранения изображений
 UPLOAD_FOLDER = 'generated_images'
 METADATA_FILE = os.path.join(UPLOAD_FOLDER, 'metadata.json')
@@ -66,6 +64,7 @@ def add_image_metadata(filename, width, height, prompt, model, generation_time):
     }
     save_metadata(metadata)
 
+<<<<<<< HEAD
 def get_aspect_ratio(width, height):
     """Определяет ближайшее допустимое соотношение сторон для Gemini API"""
     # Допустимые соотношения сторон API
@@ -88,10 +87,13 @@ def generate_prompt_for_size(prompt: str, width: int, height: int) -> str:
     """Генерирует расширенный промпт с указанием размера"""
     return f"{prompt}\n\nIMPORTANT: Fill the entire frame completely. No black bars, no letterboxing, no pillarboxing. The image should extend to all edges of the canvas."
 
+=======
+>>>>>>> 03d73daf58c1fca28a972b093ae4e025564d01e1
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+<<<<<<< HEAD
 @app.post("/generate")
 async def generate(request: Request):
     if API_KEY is None:
@@ -133,10 +135,82 @@ async def generate(request: Request):
         logger.info(f"Using API aspect ratio: {aspect_ratio}")
         
         # Формируем тело запроса для Gemini API
+=======
+async def fill_black_borders(img, prompt: str) -> Image.Image:
+    """Заполняет черные полосы сгенерированным контентом"""
+    # Конвертируем в RGB для анализа
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
+    
+    # Получаем размеры изображения
+    width, height = img.size
+    
+    # Анализируем черные области (сверху/снизу и слева/справа)
+    black_threshold = 30
+    border_size = int(min(width, height) * 0.05)  # 5% от меньшей стороны
+    
+    # Проверяем верхнюю область
+    top_black = False
+    if border_size > 0:
+        top_pixels = sum(1 for x in range(width) for y in range(min(border_size, height))
+                        if all(img.getpixel((x, y))[c] < black_threshold for c in range(3)))
+        top_black = top_pixels > (width * border_size * 0.8)  # 80% черных пикселей
+    
+    # Проверяем нижнюю область
+    bottom_black = False
+    if border_size > 0 and height > border_size:
+        bottom_pixels = sum(1 for x in range(width) for y in range(max(0, height - border_size), height)
+                           if all(img.getpixel((x, y))[c] < black_threshold for c in range(3)))
+        bottom_black = bottom_pixels > (width * border_size * 0.8)
+    
+    # Проверяем левую область
+    left_black = False
+    if border_size > 0:
+        left_pixels = sum(1 for x in range(min(border_size, width)) for y in range(height)
+                         if all(img.getpixel((x, y))[c] < black_threshold for c in range(3)))
+        left_black = left_pixels > (border_size * height * 0.8)
+    
+    # Проверяем правую область
+    right_black = False
+    if border_size > 0 and width > border_size:
+        right_pixels = sum(1 for x in range(max(0, width - border_size), width) for y in range(height)
+                          if all(img.getpixel((x, y))[c] < black_threshold for c in range(3)))
+        right_black = right_pixels > (border_size * height * 0.8)
+    
+    # Если нет черных областей, возвращаем оригинал
+    if not (top_black or bottom_black or left_black or right_black):
+        logger.info("Черные полосы не обнаружены")
+        return img
+    
+    logger.info(f"Обнаружены черные полосы: верх={top_black}, низ={bottom_black}, лево={left_black}, право={right_black}")
+    
+    try:
+        # Конвертируем изображение в base64 для отправки в Gemini
+        img_buffer = BytesIO()
+        img.save(img_buffer, format='PNG')
+        img_b64 = base64.b64encode(img_buffer.getvalue()).decode()
+        
+        # Формируем специфичный промпт в зависимости от типа черных полос
+        border_types = []
+        if top_black:
+            border_types.append("top")
+        if bottom_black:
+            border_types.append("bottom")
+        if left_black:
+            border_types.append("left")
+        if right_black:
+            border_types.append("right")
+        
+        border_description = ", ".join(border_types)
+        extend_prompt = f"Extend the image to fill the black border areas on the {border_description} side(s) with matching content from the original scene. Seamlessly continue the existing composition. {prompt}"
+        
+        # Отправляем запрос в Gemini с изображением
+>>>>>>> 03d73daf58c1fca28a972b093ae4e025564d01e1
         payload = {
             "contents": [
                 {
                     "parts": [
+<<<<<<< HEAD
                         { "text": enhanced_prompt }
                     ]
                 }
@@ -147,6 +221,18 @@ async def generate(request: Request):
                 },
                 "responseModalities": ["IMAGE"]
             }
+=======
+                        { "text": extend_prompt },
+                        {
+                            "inline_data": {
+                                "mime_type": "image/png",
+                                "data": img_b64
+                            }
+                        }
+                    ]
+                }
+            ]
+>>>>>>> 03d73daf58c1fca28a972b093ae4e025564d01e1
         }
 
         headers = {
@@ -154,6 +240,7 @@ async def generate(request: Request):
             "x-goog-api-key": API_KEY
         }
 
+<<<<<<< HEAD
         async with httpx.AsyncClient() as client:
             resp = await client.post(GEMINI_URL, headers=headers, json=payload, timeout=60)
             resp.raise_for_status()
@@ -162,10 +249,138 @@ async def generate(request: Request):
     except httpx.HTTPStatusError as e:
         logger.error(f"HTTP error: {e.response.status_code} - {e.response.text}")
         return JSONResponse({"error": f"HTTP Error: {e.response.status_code} — {e.response.text}"}, status_code=500)
+=======
+        # Настройки прокси
+        proxy_url = "http://E31cha:hxycdk@45.147.183.125:8000"
+
+        async with httpx.AsyncClient(proxy=proxy_url) as client:
+            resp = await client.post(GEMINI_URL, headers=headers, json=payload, timeout=60)
+            resp.raise_for_status()
+            resp_json = resp.json()
+            
+            # Извлекаем расширенное изображение из ответа
+            for candidate in resp_json.get("candidates", []):
+                for part in candidate.get("content", {}).get("parts", []):
+                    inline = part.get("inlineData") or part.get("inline_data")
+                    if inline and inline.get("data"):
+                        extended_data = base64.b64decode(inline["data"])
+                        with Image.open(BytesIO(extended_data)) as extended_img:
+                            extended_img = extended_img.convert('RGB')
+                            # Масштабируем до нужного размера
+                            result = extended_img.resize((width, height), Image.Resampling.LANCZOS)
+                            logger.info("Изображение успешно расширено")
+                            return result
+            
+            raise Exception("No extended image in response")
+            
+    except Exception as e:
+        logger.error(f"Ошибка расширения изображения: {e}")
+        return img
+
+async def generate_image_with_retry(prompt: str, max_retries: int = 3) -> str:
+    """Генерирует изображение с повторными попытками при ошибках квоты"""
+    for attempt in range(max_retries):
+        try:
+            # Формируем тело запроса для Gemini API
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            { "text": prompt }
+                        ]
+                    }
+                ]
+            }
+
+            headers = {
+                "Content-Type": "application/json",
+                "x-goog-api-key": API_KEY
+            }
+
+            # Настройки прокси
+            proxy_url = "http://E31cha:hxycdk@45.147.183.125:8000"
+            
+            async with httpx.AsyncClient(proxy=proxy_url) as client:
+                resp = await client.post(GEMINI_URL, headers=headers, json=payload, timeout=60)
+                
+                if resp.status_code == 429:
+                    # Обрабатываем ошибку квоты
+                    error_data = resp.json()
+                    retry_after = 60  # По умолчанию 60 секунд
+                    
+                    # Пытаемся извлечь время ожидания из ошибки
+                    try:
+                        details = error_data.get("error", {}).get("details", [])
+                        for detail in details:
+                            if detail.get("@type") == "type.googleapis.com/google.rpc.RetryInfo":
+                                retry_info = detail.get("retryDelay", "")
+                                if retry_info.endswith("s"):
+                                    retry_after = int(float(retry_info[:-1]))
+                                    break
+                    except:
+                        pass
+                    
+                    if attempt < max_retries - 1:
+                        logger.warning(f"Quota exceeded, retrying in {retry_after} seconds (attempt {attempt + 1}/{max_retries})")
+                        await asyncio.sleep(retry_after)
+                        continue
+                    else:
+                        raise Exception(f"Quota exceeded after {max_retries} attempts")
+                
+                resp.raise_for_status()
+                resp_json = resp.json()
+                
+                # Извлекаем изображение из ответа
+                for candidate in resp_json.get("candidates", []):
+                    for part in candidate.get("content", {}).get("parts", []):
+                        inline = part.get("inlineData") or part.get("inline_data")
+                        if inline and inline.get("data"):
+                            return inline["data"]
+                
+                raise Exception("No image in response")
+                
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 429:
+                if attempt < max_retries - 1:
+                    continue
+                else:
+                    raise Exception(f"HTTP Error: {e.response.status_code} — {e.response.text}")
+            else:
+                raise Exception(f"HTTP Error: {e.response.status_code} — {e.response.text}")
+        except Exception as e:
+            if attempt < max_retries - 1:
+                logger.warning(f"Error on attempt {attempt + 1}, retrying: {e}")
+                await asyncio.sleep(2 ** attempt)  # Exponential backoff
+                continue
+            else:
+                raise
+
+@app.post("/generate")
+async def generate(request: Request):
+    if API_KEY is None:
+        logger.error("GEMINI_API_KEY not set")
+        return JSONResponse({"error": "Server misconfiguration: GEMINI_API_KEY not set"}, status_code=500)
+    
+    # Проверяем, включена ли генерация изображений
+    if not ENABLE_IMAGE_GENERATION:
+        return JSONResponse({"error": IMAGE_GENERATION_MESSAGE}, status_code=503)
+    
+    try:
+        data = await request.json()
+        prompt = data.get("prompt")
+        if not prompt:
+            return JSONResponse({"error": "Prompt missing"}, status_code=400)
+
+        # Используем функцию с повторными попытками
+        img_b64 = await generate_image_with_retry(prompt)
+        return JSONResponse({"image_b64": img_b64})
+        
+>>>>>>> 03d73daf58c1fca28a972b093ae4e025564d01e1
     except Exception as e:
         logger.exception("Unexpected error in generate")
         return JSONResponse({"error": f"Internal error: {str(e)}"}, status_code=500)
 
+<<<<<<< HEAD
     # Разбор ответа
     # ищем первую часть с inline_data — это изображение
     for candidate in resp_json.get("candidates", []):
@@ -179,6 +394,8 @@ async def generate(request: Request):
 
     return JSONResponse({"error": "No image in response"}, status_code=500)
 
+=======
+>>>>>>> 03d73daf58c1fca28a972b093ae4e025564d01e1
 @app.post("/save_image")
 async def save_image(request: Request):
     """Сохраняет изображение из base64 на сервере"""
@@ -209,6 +426,7 @@ async def save_image(request: Request):
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
                 
+<<<<<<< HEAD
                 # Получаем исходные размеры от API
                 original_width, original_height = img.size
                 logger.info(f"Original image size from API: {original_width}x{original_height}")
@@ -234,6 +452,46 @@ async def save_image(request: Request):
                     actual_width, actual_height = img.size
             except:
                 actual_width, actual_height = width, height
+=======
+                original_size = img.size
+                logger.info(f"Исходный размер изображения от Gemini: {original_size}")
+                logger.info(f"Целевой размер: {width}x{height}")
+
+                # Изменяем размер с сохранением пропорций БЕЗ обрезки
+                # Вычисляем коэффициент масштабирования (уменьшаем, чтобы поместилось)
+                ratio = min(width / original_size[0], height / original_size[1])
+                new_size = (int(original_size[0] * ratio), int(original_size[1] * ratio))
+                
+                # Масштабируем изображение
+                img = img.resize(new_size, Image.Resampling.LANCZOS)
+                logger.info(f"Размер после масштабирования: {img.size}")
+                
+                # Создаем новое изображение целевого размера с черным фоном
+                result = Image.new('RGB', (width, height), (0, 0, 0))
+                
+                # Вычисляем позицию для центрирования
+                paste_x = (width - new_size[0]) // 2
+                paste_y = (height - new_size[1]) // 2
+                
+                # Вставляем масштабированное изображение по центру
+                result.paste(img, (paste_x, paste_y))
+                logger.info(f"Изображение вставлено в позицию: ({paste_x}, {paste_y})")
+                
+                # Заполняем черные полосы сгенерированным контентом
+                result = await fill_black_borders(result, prompt)
+                
+                logger.info(f"Финальный размер: {result.size}")
+
+                # Сохраняем как PNG
+                result.save(filepath, 'PNG')
+                actual_width, actual_height = result.size
+                
+        except Exception as e:
+            # Если PIL не может обработать, сохраняем как есть
+            with open(filepath, 'wb') as f:
+                f.write(image_data)
+            actual_width, actual_height = width, height
+>>>>>>> 03d73daf58c1fca28a972b093ae4e025564d01e1
         
         # Добавляем метаданные
         generation_time = 0  # Время генерации уже прошло
